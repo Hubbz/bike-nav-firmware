@@ -1,0 +1,45 @@
+# ESP-IDF build artifacts
+build/
+managed_components/
+dependencies.lock
+.deps/
+*.bin
+*.elf
+*.map
+*.hex
+*.uf2
+*.img
+*.log
+sdkconfig
+sdkconfig.old
+sdkconfig.defaults
+
+# PlatformIO artifacts
+.pio/
+
+# VS Code workspace settings
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/c_cpp_properties.json
+
+# Python virtual environments
+.venv/
+venv/
+env/
+ENV/
+.espressif/
+pythonenv/
+__pycache__/
+*.pyc
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Operating system / editor noise
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~

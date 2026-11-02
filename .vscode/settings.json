@@ -1,0 +1,13 @@
+{
+  "idf.currentSetup": "/home/mhubbard/.espressif/v6.1/esp-idf",
+  "idf.customExtraVars": {
+    "IDF_TARGET": "esp32s3"
+  },
+  "clangd.path": "/home/mhubbard/.espressif/tools/esp-clangd/esp-21.1.3_20260408/esp-clangd/bin/clangd",
+  "clangd.arguments": [
+    "--background-index",
+    "--query-driver=**",
+    "--compile-commands-dir=/home/mhubbard/Dev/personal/Bike nav/bike-nav-firmware/build"
+  ],
+  "idf.flashType": "JTAG"
+}

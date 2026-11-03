@@ -19,5 +19,5 @@ flash:
 monitor:
 	$(IDF_PY) -p $(PORT) monitor
 
-all: clean target build flash
+all: clean build flash
 

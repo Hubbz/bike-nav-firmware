@@ -4,13 +4,9 @@
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-
-#if __has_include("lvgl.h")
-#include "lvgl.h"
-#define LVGL_AVAILABLE 1
-#else
-#define LVGL_AVAILABLE 0
-#endif
+#include "board_display.h"
+#include "launcher_ui.h"
+#include "ui_config.h"
 
 static const char *TAG = "bike_nav";
 
@@ -19,22 +15,27 @@ static void lvgl_ui_task(void *arg)
     (void)arg;
 
 #if LVGL_AVAILABLE
-    lv_init();
-
-    lv_obj_t *screen = lv_scr_act();
-    lv_obj_t *title_label = lv_label_create(screen);
-    lv_label_set_text(title_label, "Bike Nav");
-    lv_obj_center(title_label);
-
-    ESP_LOGI(TAG, "LVGL initialized and UI foundation created.");
+    if (!bike_board_display_init()) {
+        ESP_LOGE(TAG, "Display/touch initialization failed.");
+    } else if (!bike_board_display_lock(portMAX_DELAY)) {
+        ESP_LOGE(TAG, "Failed to lock LVGL for launcher UI setup.");
+    } else if (bike_launcher_ui_init()) {
+        bike_board_display_unlock();
+        if (!bike_board_display_show()) {
+            ESP_LOGW(TAG, "Initial LVGL frame show failed.");
+        }
+        ESP_LOGI(TAG, "LVGL launcher UI created.");
+    } else {
+        bike_board_display_unlock();
+        ESP_LOGE(TAG, "LVGL initialized but launcher UI was not created.");
+    }
+#else
+    ESP_LOGW(TAG, "LVGL not available. Running without UI.");
 #endif
 
     for (;;) {
         vTaskDelay(pdMS_TO_TICKS(20));
-
-#if LVGL_AVAILABLE
-        lv_timer_handler();
-#endif
+        bike_launcher_ui_tick();
     }
 }
 

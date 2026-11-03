@@ -57,6 +57,34 @@ idf.py set-target esp32s3
 idf.py build
 ```
 
+## Current launcher behavior
+
+The firmware currently boots into a basic modular launcher flow:
+
+0. Board display stack is initialized for this hardware:
+   - LCD: ST77916 over QSPI
+   - Touch: CST816S over I2C
+
+1. A **black splash screen** is shown with centered **HELLO** text that fades in, then fades out (~2 seconds total).
+2. The **home screen** appears and shows:
+   - Current time (top-left)
+   - Battery percentage (top-right)
+   - Black background with launcher area/message in the center
+3. If no apps are registered, the home screen shows **"No apps available"**.
+4. If apps are registered, users can:
+   - **Swipe left/right** on the app card to move between apps
+   - **Tap** the card to open the selected app
+   - Tap again on the opened app screen to return home
+
+### Adding modular apps
+
+Apps are defined in [app_registry.c](./main/app_registry.c) using the `bike_app_t` structure declared in [app_registry.h](./main/app_registry.h).  
+To add a new app, add an entry to the `APPS[]` array with:
+- `id`: unique app id
+- `name`: display name
+- `icon`: short icon text for the launcher card
+- `on_open`: callback executed when the app is opened
+
 ## Flashing notes & troubleshooting hotplug issues
 
 - Make sure the board is connected over USB-C and visible as `/dev/ttyACM0`.

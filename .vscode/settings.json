@@ -9,5 +9,5 @@
     "--query-driver=**",
     "--compile-commands-dir=/home/mhubbard/Dev/personal/Bike nav/bike-nav-firmware/build"
   ],
-  "idf.flashType": "JTAG"
+  "idf.flashType": "UART"
 }

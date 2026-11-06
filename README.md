@@ -78,12 +78,35 @@ The firmware currently boots into a basic modular launcher flow:
 
 ### Adding modular apps
 
-Apps are defined in [app_registry.c](./main/app_registry.c) using the `bike_app_t` structure declared in [app_registry.h](./main/app_registry.h).  
+Use a per-app folder under the main app tree, following the pattern below:
+
+```text
+main/
+├── app_registry.c
+├── app_registry.h
+├── apps/
+│   └── security/
+│       ├── security_app.c
+│       └── security_app.h
+└── launcher_ui.c
+```
+
+Apps are registered in [main/app_registry.c](./main/app_registry.c) using the `bike_app_t` structure declared in [main/app_registry.h](./main/app_registry.h).  
 To add a new app, add an entry to the `APPS[]` array with:
 - `id`: unique app id
 - `name`: display name
 - `icon`: short icon text for the launcher card
-- `on_open`: callback executed when the app is opened
+- `on_open`: callback executed when the app is opened and receives the target screen to populate
+
+Each app should live in its own directory and expose a screen callback like `bike_arm_alarm_app_open`, keeping the UI, logic, and hardware integration isolated from the rest of the dashboard.
+
+Use `bike_app_layout_init()` to build app screens with a shared template:
+- top title aligned to the same y-offset as the launcher time label
+- center content area aligned to the launcher card zone
+- bottom footer/back region aligned to the launcher battery label
+- standard `< Back` button to return to the dashboard
+
+Shared launcher/app geometry constants are declared in [main/app_registry.h](./main/app_registry.h) so app cards and app content stay visually consistent.
 
 ## Flashing notes & troubleshooting hotplug issues
 

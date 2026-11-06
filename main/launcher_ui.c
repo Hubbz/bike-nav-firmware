@@ -54,7 +54,7 @@ static void add_black_backdrop(lv_obj_t *screen)
     lv_obj_t *backdrop = lv_obj_create(screen);
     lv_obj_set_size(backdrop, LV_PCT(100), LV_PCT(100));
     lv_obj_center(backdrop);
-    lv_obj_set_flag(backdrop, LV_OBJ_FLAG_SCROLLABLE, false);
+    lv_obj_set_scrollable(backdrop, false);
     lv_obj_set_style_bg_color(backdrop, lv_color_black(), LV_PART_MAIN);
     lv_obj_set_style_bg_opa(backdrop, LV_OPA_COVER, LV_PART_MAIN);
     lv_obj_set_style_border_width(backdrop, 0, LV_PART_MAIN);
@@ -102,20 +102,13 @@ static void refresh_app_card(void)
         lv_obj_set_hidden(s_no_apps_label, true);
     }
     lv_obj_set_hidden(s_app_card, false);
+    if (s_app_hint_label != NULL) {
+        lv_obj_set_hidden(s_app_hint_label, true);
+    }
 
     const bike_app_t *app = &s_apps[s_current_app_index];
     lv_label_set_text(s_app_icon_label, app->icon);
     lv_label_set_text(s_app_name_label, app->name);
-
-    char hint_text[64];
-    snprintf(
-        hint_text,
-        sizeof(hint_text),
-        "Swipe left/right (%u/%u) | Tap to open",
-        (unsigned int)(s_current_app_index + 1U),
-        (unsigned int)s_app_count
-    );
-    lv_label_set_text(s_app_hint_label, hint_text);
 }
 
 static void show_home_screen(void)
@@ -143,11 +136,6 @@ static void open_current_app(void)
         return;
     }
 
-    if (!bike_app_open(s_current_app_index)) {
-        ESP_LOGW(TAG, "Failed to open app at index %u", (unsigned int)s_current_app_index);
-        return;
-    }
-
     if (s_app_screen != NULL) {
         lv_obj_del(s_app_screen);
         s_app_screen = NULL;
@@ -155,25 +143,29 @@ static void open_current_app(void)
 
     const bike_app_t *app = &s_apps[s_current_app_index];
     s_app_screen = lv_obj_create(NULL);
-    lv_obj_set_flag(s_app_screen, LV_OBJ_FLAG_SCROLLABLE, false);
+    lv_obj_set_scrollable(s_app_screen, false);
     set_screen_black(s_app_screen);
 
-    lv_obj_t *icon = lv_label_create(s_app_screen);
-    lv_label_set_text(icon, app->icon);
-    lv_obj_align(icon, LV_ALIGN_CENTER, 0, -24);
-    set_text_white(icon);
-
-    lv_obj_t *name = lv_label_create(s_app_screen);
-    lv_label_set_text(name, app->name);
-    lv_obj_align_to(name, icon, LV_ALIGN_OUT_BOTTOM_MID, 0, 8);
-    set_text_white(name);
-
-    lv_obj_t *hint = lv_label_create(s_app_screen);
-    lv_label_set_text(hint, "Tap anywhere to return home");
-    lv_obj_align(hint, LV_ALIGN_BOTTOM_MID, 0, -12);
-    set_text_white(hint);
-
     lv_obj_add_event_cb(s_app_screen, app_screen_event_cb, LV_EVENT_RELEASED, NULL);
+
+    if (!bike_app_open(s_current_app_index, s_app_screen)) {
+        ESP_LOGW(TAG, "Failed to open app at index %u", (unsigned int)s_current_app_index);
+        lv_obj_t *icon = lv_label_create(s_app_screen);
+        lv_label_set_text(icon, app->icon);
+        lv_obj_align(icon, LV_ALIGN_CENTER, 0, -24);
+        set_text_white(icon);
+
+        lv_obj_t *name = lv_label_create(s_app_screen);
+        lv_label_set_text(name, app->name);
+        lv_obj_align_to(name, icon, LV_ALIGN_OUT_BOTTOM_MID, 0, 16);
+        set_text_white(name);
+
+        lv_obj_t *hint = lv_label_create(s_app_screen);
+        lv_label_set_text(hint, "Tap anywhere to return home");
+        lv_obj_align(hint, LV_ALIGN_BOTTOM_MID, 0, -24);
+        set_text_white(hint);
+    }
+
     lv_scr_load(s_app_screen);
 }
 
@@ -219,24 +211,24 @@ static void app_card_event_cb(lv_event_t *event)
 static void create_home_screen(void)
 {
     s_home_screen = lv_obj_create(NULL);
-    lv_obj_set_flag(s_home_screen, LV_OBJ_FLAG_SCROLLABLE, false);
+    lv_obj_set_scrollable(s_home_screen, false);
     set_screen_black(s_home_screen);
     add_black_backdrop(s_home_screen);
 
     s_time_label = lv_label_create(s_home_screen);
-    lv_obj_align(s_time_label, LV_ALIGN_TOP_MID, 0, 10);
+    lv_obj_align(s_time_label, LV_ALIGN_TOP_MID, 0, BIKE_LAYOUT_TOP_Y);
     set_text_white(s_time_label);
     lv_obj_set_style_text_font(s_time_label, LV_FONT_DEFAULT, LV_PART_MAIN);
 
     s_battery_label = lv_label_create(s_home_screen);
-    lv_obj_align(s_battery_label, LV_ALIGN_BOTTOM_MID, 0, -10);
+    lv_obj_align(s_battery_label, LV_ALIGN_BOTTOM_MID, 0, BIKE_LAYOUT_BOTTOM_Y);
     set_text_white(s_battery_label);
     lv_obj_set_style_text_font(s_battery_label, LV_FONT_DEFAULT, LV_PART_MAIN);
 
     s_app_card = lv_obj_create(s_home_screen);
-    lv_obj_set_size(s_app_card, 170, 150);
-    lv_obj_align(s_app_card, LV_ALIGN_CENTER, 0, 8);
-    lv_obj_set_flag(s_app_card, LV_OBJ_FLAG_SCROLLABLE, false);
+    lv_obj_set_size(s_app_card, BIKE_LAYOUT_CARD_WIDTH, BIKE_LAYOUT_CARD_HEIGHT);
+    lv_obj_align(s_app_card, LV_ALIGN_CENTER, 0, BIKE_LAYOUT_CARD_CENTER_Y);
+    lv_obj_set_scrollable(s_app_card, false);
     lv_obj_set_style_bg_opa(s_app_card, LV_OPA_TRANSP, LV_PART_MAIN);
     lv_obj_set_style_border_opa(s_app_card, LV_OPA_50, LV_PART_MAIN);
     lv_obj_set_style_border_color(s_app_card, lv_color_white(), LV_PART_MAIN);
@@ -244,16 +236,17 @@ static void create_home_screen(void)
     lv_obj_add_event_cb(s_app_card, app_card_event_cb, LV_EVENT_RELEASED, NULL);
 
     s_app_icon_label = lv_label_create(s_app_card);
-    lv_obj_align(s_app_icon_label, LV_ALIGN_CENTER, 0, -20);
+    lv_obj_align(s_app_icon_label, LV_ALIGN_CENTER, 0, BIKE_LAYOUT_CARD_ICON_Y);
     set_text_white(s_app_icon_label);
 
     s_app_name_label = lv_label_create(s_app_card);
-    lv_obj_align(s_app_name_label, LV_ALIGN_CENTER, 0, 20);
+    lv_obj_align(s_app_name_label, LV_ALIGN_CENTER, 0, BIKE_LAYOUT_CARD_TEXT_Y);
     set_text_white(s_app_name_label);
 
     s_app_hint_label = lv_label_create(s_home_screen);
     lv_obj_align(s_app_hint_label, LV_ALIGN_BOTTOM_MID, 0, -10);
     set_text_white(s_app_hint_label);
+    lv_obj_set_hidden(s_app_hint_label, true);
 
     s_no_apps_label = lv_label_create(s_home_screen);
     lv_label_set_text(s_no_apps_label, "No apps available");
@@ -279,7 +272,7 @@ static void splash_timeout_cb(lv_timer_t *timer)
 static void create_and_show_splash_screen(void)
 {
     s_splash_screen = lv_obj_create(NULL);
-    lv_obj_set_flag(s_splash_screen, LV_OBJ_FLAG_SCROLLABLE, false);
+    lv_obj_set_scrollable(s_splash_screen, false);
     set_screen_black(s_splash_screen);
     add_black_backdrop(s_splash_screen);
 

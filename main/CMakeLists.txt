@@ -2,6 +2,7 @@ idf_component_register(
     SRCS
         "main.c"
         "app_registry.c"
+        "apps/alert/alert_app.c"
         "apps/security/security_app.c"
         "board_display.c"
         "launcher_ui.c"

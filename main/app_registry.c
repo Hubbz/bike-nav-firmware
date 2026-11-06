@@ -1,4 +1,5 @@
 #include "app_registry.h"
+#include "apps/alert/alert_app.h"
 #include "apps/security/security_app.h"
 
 #include <string.h>
@@ -71,6 +72,7 @@ void bike_app_layout_init(lv_obj_t *screen, const char *title_text, bike_app_lay
 
 static const bike_app_t APPS[] = {
     {"security", "Security", "🔒", bike_arm_alarm_app_open},
+    {"alert", "Alert", "🚨", bike_alert_app_open},
 };
 
 static const size_t APP_COUNT = sizeof(APPS) / sizeof(APPS[0]);

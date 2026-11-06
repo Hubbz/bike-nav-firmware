@@ -27,6 +27,9 @@ static lv_obj_t *s_app_icon_label = NULL;
 static lv_obj_t *s_app_name_label = NULL;
 static lv_obj_t *s_app_hint_label = NULL;
 static lv_obj_t *s_no_apps_label = NULL;
+static lv_obj_t *s_pagination_panel = NULL;
+static lv_obj_t *s_page_dots[16] = {0};
+static size_t s_page_dot_count = 0U;
 static lv_obj_t *s_app_screen = NULL;
 static lv_obj_t *s_splash_label = NULL;
 
@@ -83,6 +86,47 @@ static void status_timer_cb(lv_timer_t *timer)
     update_status_bar();
 }
 
+static void refresh_pagination_dots(void)
+{
+    if (s_app_count == 0U) {
+        if (s_pagination_panel != NULL) {
+            lv_obj_set_hidden(s_pagination_panel, true);
+        }
+        return;
+    }
+
+    if (s_pagination_panel == NULL) {
+        s_pagination_panel = lv_obj_create(s_home_screen);
+        lv_obj_set_size(s_pagination_panel, 120, 18);
+        lv_obj_align(s_pagination_panel, LV_ALIGN_BOTTOM_MID, 0, -44);
+        lv_obj_set_scrollable(s_pagination_panel, false);
+        lv_obj_set_style_bg_opa(s_pagination_panel, LV_OPA_TRANSP, LV_PART_MAIN);
+        lv_obj_set_style_border_width(s_pagination_panel, 0, LV_PART_MAIN);
+    }
+
+    lv_obj_set_hidden(s_pagination_panel, false);
+    lv_obj_clean(s_pagination_panel);
+
+    const int16_t dot_size = 8;
+    const int16_t spacing = 14;
+    const int16_t panel_half_width = (int16_t)((s_app_count - 1U) * spacing / 2);
+
+    for (size_t i = 0U; i < s_app_count; ++i) {
+        lv_obj_t *dot = lv_obj_create(s_pagination_panel);
+        lv_obj_set_size(dot, dot_size, dot_size);
+        lv_obj_set_style_radius(dot, LV_RADIUS_CIRCLE, LV_PART_MAIN);
+        lv_obj_set_style_bg_opa(dot, LV_OPA_COVER, LV_PART_MAIN);
+        lv_obj_set_style_border_width(dot, 0, LV_PART_MAIN);
+
+        const bool is_active = i == s_current_app_index;
+        lv_obj_set_style_bg_color(dot, is_active ? lv_color_white() : lv_color_hex(0x5d6473), LV_PART_MAIN);
+        lv_obj_align(dot, LV_ALIGN_CENTER, (int16_t)((int32_t)i * spacing - panel_half_width), 0);
+        s_page_dots[i] = dot;
+    }
+
+    s_page_dot_count = s_app_count;
+}
+
 static void refresh_app_card(void)
 {
     if (s_app_card == NULL) {
@@ -95,6 +139,9 @@ static void refresh_app_card(void)
         }
         lv_label_set_text(s_app_hint_label, "");
         lv_obj_set_hidden(s_app_card, true);
+        if (s_pagination_panel != NULL) {
+            lv_obj_set_hidden(s_pagination_panel, true);
+        }
         return;
     }
 
@@ -109,6 +156,7 @@ static void refresh_app_card(void)
     const bike_app_t *app = &s_apps[s_current_app_index];
     lv_label_set_text(s_app_icon_label, app->icon);
     lv_label_set_text(s_app_name_label, app->name);
+    refresh_pagination_dots();
 }
 
 static void show_home_screen(void)
@@ -247,6 +295,13 @@ static void create_home_screen(void)
     lv_obj_align(s_app_hint_label, LV_ALIGN_BOTTOM_MID, 0, -10);
     set_text_white(s_app_hint_label);
     lv_obj_set_hidden(s_app_hint_label, true);
+
+    s_pagination_panel = lv_obj_create(s_home_screen);
+    lv_obj_set_size(s_pagination_panel, 120, 18);
+    lv_obj_align(s_pagination_panel, LV_ALIGN_BOTTOM_MID, 0, -44);
+    lv_obj_set_scrollable(s_pagination_panel, false);
+    lv_obj_set_style_bg_opa(s_pagination_panel, LV_OPA_TRANSP, LV_PART_MAIN);
+    lv_obj_set_style_border_width(s_pagination_panel, 0, LV_PART_MAIN);
 
     s_no_apps_label = lv_label_create(s_home_screen);
     lv_label_set_text(s_no_apps_label, "No apps available");
